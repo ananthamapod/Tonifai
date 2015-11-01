@@ -1,6 +1,12 @@
 import requests
+import urllib
 
-def get_tags():
+key = ""
+
+f = open("encoded.txt")
+key = f.readline()
+
+def get_tags(encoded_data):
     payload = { 
         "grant_type": "client_credentials",
         "client_id": "JBVqlsHeEhudFSEQirJzt04piCJ5fBsVux7kNoxA",
@@ -8,13 +14,14 @@ def get_tags():
     }   
     token = requests.post("https://api.clarifai.com/v1/token/", params=payload).json()
     access_token = token['access_token']
+    print access_token
     payload = { 
-        "url": "http://jayravaliya.com:5000/img.png"
+        "encoded_data": encoded_data
     }   
     header = { 
         "Authorization" : "Bearer " + access_token
     }   
-    final = requests.post("https://api.clarifai.com/v1/tag/", params=payload, headers=header)
+    final = requests.post("https://api.clarifai.com/v1/tag", params=payload, headers=header)
     print final.text
 
 def get_song(tags):
@@ -31,4 +38,4 @@ def get_song(tags):
         if len(val.text_content()) > 1:
                 print val.text_content()
 
-get_tags()
+get_tags(key)

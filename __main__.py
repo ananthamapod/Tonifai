@@ -40,13 +40,15 @@ def sing():
         answer = request.values.get('Body').lower()
         print answer
         # if response is some kind of yes
+
+
         if answer in ['yeah', 'yes', 'yep', 'yup', 'yea', 'ya']:
             # send the song call
             print "This is true"
             client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
 
             call = client.calls.create(
-                url="https://2c7cfed2.ngrok.com/twiml/" + "Temp" + ".xml",
+                url="http://jayravaliya.com:5000/twiml/" + "Temp" + ".xml",
                 to=sender,
                 from_=twilio_number,
                 method="GET",
@@ -85,9 +87,9 @@ def initiate():
         data = [request.values.get("number"), request.values.get("image")]
 	print "Other"
 
-    fh = open("img.png", "wb")
-    fh.write(data[1].decode('base64'))
-    fh.close()
+    #fh = open("/var/www/sdn.jayravaliya.com/public_html/img.png", "wb")
+    #fh.write(data[1].decode('base64'))
+    #fh.close()
  
     # Create variable for the fixed number.
     fixedNumber = ""
@@ -129,37 +131,6 @@ def initiate():
 #@app.route("/audio/test.mp3", methods=['GET','POST'])
 #def audioFiles():
 #    app.send_static_file('audio/test.mp3')
-
-def get_tags():
-    payload = {
-	"grant_type": "client_credentials",
-	"client_id": "JBVqlsHeEhudFSEQirJzt04piCJ5fBsVux7kNoxA",
-	"client_secret": "9QdRHGl5VbYSj4dgnJEegrA8ppAuH3KNmit_2A7O"
-    }
-    token = requests.post("https://api.clarifai.com/v1/token/", params=payload).json()
-    access_token = token['access_token']
-    payload = {
-    	"url": "http://jayravaliya.com:5000/img.png"
-    }
-    header = {
-	"Authorization" : "Bearer " + access_token
-    }
-    final = requests.post("https://api.clarifai.com/v1/tag/", params=payload, headers=header)
-    print final.text
-
-def get_song(tags):
-    search = ""
-    for elem in tags:
-	search = search + elem + "+"
-
-    payload = {"q" : search}
-
-    page = requests.get("http://search.azlyrics.com/search.php", params=payload)
-    tree = html.document_fromstring(page.text)
-
-    for val in tree.xpath("//a[contains(@href, 'lyrics')]"):
-        if len(val.text_content()) > 1:
-		print val.text_content()
 
 if __name__ == "__main__":
     app.run(debug=True, host='0.0.0.0')
