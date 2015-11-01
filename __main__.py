@@ -82,6 +82,10 @@ def initiate():
     except:
         data = [request.values.get("number"), request.values.get("image")]
 	print "Other"
+
+    fh = open("img.png", "wb")
+    fh.write(data[1].decode('base64'))
+    fh.close()
  
     # Create variable for the fixed number.
     fixedNumber = ""
