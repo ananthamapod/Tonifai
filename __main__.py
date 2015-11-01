@@ -63,12 +63,24 @@ def monitor():
 
 @app.route("/initiate", methods=['POST'])
 def initiate():
-	r = Record(request.form['number'], request.form['image'])
+	fixedNumber = ""
+
+	for elem in request.form['number']:
+		if elem.isnumeric():
+			fixedNumber = fixedNumber + str(elem) 
+
+	if len(fixedNumber) == 10:
+		fixedNumber = "+1" + fixedNumber
+	elif len(fixedNumber) == 11:
+		fixedNumber = "+" + fixedNumber 
+
+	r = Record(fixedNumber, request.form['image'])
 
 	db.session.add(r)
 	db.session.commit()
 
-	message = client.message.create(to="", from_="", body="Hey! Want to HEAR what your PICTURE looks like? Send \"yes\" to this SMS!")
+	client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
+	message = client.messages.create(to=fixedNumber, from_=twilio_number, body="Hey! Want to HEAR what your PICTURE looks like? Send \"yes\" to this SMS!")
 
 	return "None"
 
