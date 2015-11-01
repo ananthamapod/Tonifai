@@ -7,7 +7,7 @@ from models.Record import db, Record
 from twilio.rest import TwilioRestClient
 import twilio.twiml
 
-from image import image
+# from image import image
 
 app = Flask(__name__, static_url_path='')
 
@@ -78,14 +78,16 @@ def initiate():
     try:
         json = request.get_json()
         data = [json["number"], json["image"]]
+	print "JSON"
     except:
         data = [request.values.get("number"), request.values.get("image")]
-
+	print "Other"
+ 
     # Create variable for the fixed number.
     fixedNumber = ""
     
     # Loop over characters, for every character that's numeric - append to the fixedNumber.
-    for elem in request.values.get('number'):
+    for elem in data[0]:
         if elem.isnumeric():
             fixedNumber = fixedNumber + str(elem)
 
@@ -96,11 +98,11 @@ def initiate():
         fixedNumber = "+" + fixedNumber
 
     # Store fixed number back to dictionary.
-    data["number"] = fixedNumber
+    data[0] = fixedNumber
 
     # Create new record, query all items in the db where the phone number is equal to the 
     # input phone number.
-    r = Record(fixedNumber, request.values.get("image"))
+    r = Record(data[0], data[1])
     phones = Record.query.filter_by(phone=fixedNumber).all()
 
     # As long as that record does not exist, add it and commit.
@@ -125,5 +127,5 @@ def initiate():
 
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0')
     print __name__
