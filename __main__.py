@@ -1,11 +1,15 @@
+#!usr/bin/python
+
 import os
-from flask import Flask, request, redirect
+from flask import Flask, request, redirect, send_from_directory
 from models.Record import db, Record
 
 from twilio.rest import TwilioRestClient
 import twilio.twiml
 
-app = Flask(__name__)
+from image import image
+
+app = Flask(__name__, static_url_path='')
 
 # Credentials
 twilio_account_sid = 'AC613975d801ea2516d3cbdaa570550163'
@@ -18,15 +22,16 @@ twilio_number = "+19733214779"
 #os.environ['TWILIO_NUMBER'] or
 
 
-@app.route("/", methods=['POST'])
+@app.route("/", methods=['GET','POST'])
 def add():
     """Takes in contact and image data."""
     pass
-    return "None"
+    return "This works"
 
 @app.route("/sing", methods=['GET','POST'])
 def sing():
     """Take in the response to the text sent and decide whether to call."""
+    print request.values
     if request.values.get('From') and request.values.get('Body'):
         # assumes if there is a From parameter that this is from Twilio
         sender = request.values.get('From')
@@ -39,15 +44,17 @@ def sing():
             client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
 
             call = client.calls.create(
-                url="https://2c7cfed2.ngrok.com/twiml/Temp.xml",
+                url="https://2c7cfed2.ngrok.com/twiml/" + "Temp" + ".xml",
                 to=sender,
                 from_=twilio_number,
-                method="POST",
+                method="GET",
                 status_callback="https://2c7cfed2.ngrok.com/monitor",
                 status_callback_method="POST",
                 status_events=['completed']
             )
-        return "Yessir"
+    else:
+        print "test"
+    return "Yessir"
 
 @app.route("/monitor", methods=['POST'])
 def monitor():
@@ -61,28 +68,44 @@ def monitor():
 
     return "Great"
 
-@app.route("/initiate", methods=['POST'])
+@app.route("/initiate", methods=['GET', 'POST'])
 def initiate():
-	fixedNumber = ""
+    fixedNumber = ""
+    print request.form['number']
+    print "A"
+    print request.values.get('number')
+    for elem in request.values.get('number'):
+        if elem.isnumeric():
+            fixedNumber = fixedNumber + str(elem)
+    print "B"
+    if len(fixedNumber) == 10:
+        fixedNumber = "+1" + fixedNumber
+    elif len(fixedNumber) == 11:
+        fixedNumber = "+" + fixedNumber
 
-	for elem in request.form['number']:
-		if elem.isnumeric():
-			fixedNumber = fixedNumber + str(elem) 
+    print "C"
+    r = Record(fixedNumber, request.values.get("image"))
+    phones = Record.query.filter_by(phone=fixedNumber).all()
 
-	if len(fixedNumber) == 10:
-		fixedNumber = "+1" + fixedNumber
-	elif len(fixedNumber) == 11:
-		fixedNumber = "+" + fixedNumber 
+    print "D"
+    if phones == None:
+        db.session.add(r)
+        db.session.commit()
+    else:
+        pass
 
-	r = Record(fixedNumber, request.form['image'])
+    print "E"
+    image(fixedNumber, request.values.get("image"))
+    client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
+    message = client.messages.create(to=fixedNumber, from_=twilio_number, body="Hey! Want to HEAR what your PICTURE looks like? Send \"yes\" to this SMS!")
 
-	db.session.add(r)
-	db.session.commit()
+    return "None"
 
-	client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
-	message = client.messages.create(to=fixedNumber, from_=twilio_number, body="Hey! Want to HEAR what your PICTURE looks like? Send \"yes\" to this SMS!")
+#@app.route("/audio/test.mp3", methods=['GET','POST'])
+#def audioFiles():
+#    app.send_static_file('audio/test.mp3')
 
-	return "None"
+
 
 if __name__ == "__main__":
     app.run(debug=True)
