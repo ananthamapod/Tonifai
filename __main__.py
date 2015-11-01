@@ -70,32 +70,49 @@ def monitor():
 
 @app.route("/initiate", methods=['GET', 'POST'])
 def initiate():
+
+    # Create a dictionary for the phone number and image.
+    data = {}
+
+    # Try to grab data as JSON. Exception - get it normally.
+    try:
+        json = request.get_json()
+        data = [json["number"], json["image"]]
+    except:
+        data = [request.values.get("number"), request.values.get("image")]
+
+    # Create variable for the fixed number.
     fixedNumber = ""
-    print request.form['number']
-    print "A"
-    print request.values.get('number')
+    
+    # Loop over characters, for every character that's numeric - append to the fixedNumber.
     for elem in request.values.get('number'):
         if elem.isnumeric():
             fixedNumber = fixedNumber + str(elem)
-    print "B"
+
+    # If the length is only 10, add +1. If it's only 11, add + (first number should be a 1).
     if len(fixedNumber) == 10:
         fixedNumber = "+1" + fixedNumber
     elif len(fixedNumber) == 11:
         fixedNumber = "+" + fixedNumber
 
-    print "C"
+    # Store fixed number back to dictionary.
+    data["number"] = fixedNumber
+
+    # Create new record, query all items in the db where the phone number is equal to the 
+    # input phone number.
     r = Record(fixedNumber, request.values.get("image"))
     phones = Record.query.filter_by(phone=fixedNumber).all()
 
-    print "D"
+    # As long as that record does not exist, add it and commit.
+    # Pass this if already there, just send them a new text!
     if phones == None:
         db.session.add(r)
         db.session.commit()
     else:
         pass
 
-    print "E"
-    image(fixedNumber, request.values.get("image"))
+    # image(fixedNumber, request.values.get("image"))
+    # Generate Twilio client. Send text.
     client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
     message = client.messages.create(to=fixedNumber, from_=twilio_number, body="Hey! Want to HEAR what your PICTURE looks like? Send \"yes\" to this SMS!")
 
