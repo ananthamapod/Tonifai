@@ -56,10 +56,9 @@ def initiate():
 	db.session.add(r)
 	db.session.commit()
 
-	message = client.message.create(to="", from_="", body="Hey! Want to HEAR what your PICTURE looks like? Send \"yes\" to this SMS!")
+	message = client.message.create(to=request.form['number'], from_=twilio_number, body="Hey! Want to HEAR what your PICTURE looks like? Send \"yes\" to this SMS!")
 
 	return "None"
 
 if __name__ == "__main__":
     app.run(debug=True)
-    print __name__
