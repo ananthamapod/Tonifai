@@ -1,5 +1,6 @@
 import os
 from flask import Flask, request, redirect
+from models.Record import db, Record
 
 from twilio.rest import TwilioRestClient
 import twilio.twiml
@@ -7,13 +8,13 @@ import twilio.twiml
 app = Flask(__name__)
 
 # Credentials
-twilio_account_sid = 'AC9cda9f49921253df4a0781b4318f4d23'
+twilio_account_sid = 'AC613975d801ea2516d3cbdaa570550163'
 #os.environ['TWILIO_ID'] or
 
-twilio_auth_token = '82b0d956d668f10c8b2b6ce7195052ef'
+twilio_auth_token = '76599dfd9b6cb8e3830385b2506d7439'
 #os.environ['TWILIO_TOKEN'] or
 
-twilio_number = "+17323557153"
+twilio_number = "+19733214779"
 #os.environ['TWILIO_NUMBER'] or
 
 
@@ -48,9 +49,16 @@ def sing():
 def monitor(phone):
     """Monitors status of phone call to delete xml at the end"""
 
+@app.route("/initiate", methods=['POST'])
+def initiate():
+	r = Record(request.form['number'], request.form['image'])
 
+	db.session.add(r)
+	db.session.commit()
 
+	message = client.message.create(to="", from_="", body="Hey! Want to HEAR what your PICTURE looks like? Send \"yes\" to this SMS!")
 
+	return "None"
 
 if __name__ == "__main__":
     app.run(debug=True)
