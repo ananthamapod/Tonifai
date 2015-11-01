@@ -31,23 +31,35 @@ def sing():
         # assumes if there is a From parameter that this is from Twilio
         sender = request.values.get('From')
         answer = request.values.get('Body').lower()
+        print answer
         # if response is some kind of yes
-        if answer.lower() in ['yeah', 'yes', 'yep', 'yup', 'yea', 'ya']:
+        if answer in ['yeah', 'yes', 'yep', 'yup', 'yea', 'ya']:
             # send the song call
-            client = TwilioRestClient(account_sid, auth_token)
+            print "This is true"
+            client = TwilioRestClient(twilio_account_sid, twilio_auth_token)
 
-            call = client.create(
+            call = client.calls.create(
                 url="https://2c7cfed2.ngrok.com/twiml/Temp.xml",
                 to=sender,
-                #from=twilio_number,
-                method="GET",
-                status_callback="https://2c7cfed2.ngrok.com/monitor" + str(sender),
+                from_=twilio_number,
+                method="POST",
+                status_callback="https://2c7cfed2.ngrok.com/monitor",
+                status_callback_method="POST",
                 status_events=['completed']
             )
+        return "Yessir"
 
-@app.route("/monitor/<phone>")
-def monitor(phone):
+@app.route("/monitor", methods=['POST'])
+def monitor():
     """Monitors status of phone call to delete xml at the end"""
+    called = request.values.get("Called")
+    caller = request.values.get("Caller")
+    callstatus = request.values.get("CallStatus")
+
+    if(callstatus == "completed"):
+        print "Awesome"
+
+    return "Great"
 
 @app.route("/initiate", methods=['POST'])
 def initiate():
